@@ -13,12 +13,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.madlevel3example.adapters.ReminderAdapter
 import com.example.madlevel3example.classes.Reminder
+import com.example.madlevel3example.repositories.ReminderRepository
 import kotlinx.android.synthetic.main.fragment_reminders.*
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
 class RemindersFragment : Fragment() {
+
+    private lateinit var reminderRepository: ReminderRepository
 
     private val reminders = arrayListOf<Reminder>()
     private val reminderAdapter = ReminderAdapter(reminders)
@@ -36,6 +39,9 @@ class RemindersFragment : Fragment() {
 
         initViews()
         observeAddReminderResult()
+
+        reminderRepository = ReminderRepository(requireContext())
+        getRemindersFromDatabase()
     }
 
     private fun initViews() {
@@ -58,8 +64,8 @@ class RemindersFragment : Fragment() {
             bundle.getString(BUNDLE_REMINDER_KEY)?.let {
                 val reminder = Reminder(it)
 
-                reminders.add(reminder)
-                reminderAdapter.notifyDataSetChanged()
+                reminderRepository.insertReminder(reminder)
+                getRemindersFromDatabase()
             } ?: Log.e("ReminderFragment", "Request triggered, but empty reminder text!")
         }
     }
@@ -92,5 +98,12 @@ class RemindersFragment : Fragment() {
             }
         }
         return ItemTouchHelper(callback)
+    }
+
+    private fun getRemindersFromDatabase() {
+        val reminders = reminderRepository.getAllReminders()
+        this@RemindersFragment.reminders.clear()
+        this@RemindersFragment.reminders.addAll(reminders)
+        reminderAdapter.notifyDataSetChanged()
     }
 }
